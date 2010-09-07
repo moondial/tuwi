@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry path="DOJA_CLASS_ZIP" kind="var"/>
+	<classpathentry path="DOJA_DOJACLASS_ZIP" kind="var"/>
+	<classpathentry excluding="org/apache/regexp/RESyntaxException.java|aoDOM/Event.java|aoDOM/EventListener.java|aoDOM/EventTarget.java|aoDOM/logEvent.java" path="src" kind="src"/>
+	<classpathentry path="classes" kind="output"/>
+</classpath>
