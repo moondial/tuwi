@@ -5,15 +5,16 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.Vector;
 
 /**
  * MessagePack Packer/Unpacker
- * 
+ *
  */
 public class Msgpack {
 	public static String encoding = "SJIS";
 	private Object _;
-	
+
 	// unpacking
 	public Msgpack(InputStream i) {
 		_ = i;
@@ -25,7 +26,7 @@ public class Msgpack {
 	// new Integer(0) 20
 	// new Long(0) 24
 	// new Object() 16
-	
+
 	/**
 	* unpacker
 	* @return unpacked object
@@ -48,31 +49,31 @@ public class Msgpack {
 			in.read(o);
 			return new String(o, encoding);
 		}
-		
+
 		// fix map
 		if((i & 0xf0) == 0x80)
 			return map(i & 0xf);
-		
+
 		// fix array
 		if((i & 0xf0) == 0x90)
 			return arr(i & 0xf);
-		
+
 		switch(i){
 		// nil(null)
 		case 0xc0: return null;
-		
+
 		// boolean
 		case 0xc2: return Boolean.FALSE;
 		case 0xc3: return Boolean.TRUE;
-		
+
 		// float/double
 		case 0xca: return new Float(Float.intBitsToFloat((in.read() << 24) + (in.read() << 16) + (in.read() << 8) + in.read()));
 		case 0xcb: return new Double(Double.longBitsToDouble(((((long)in.read() << 24) + (in.read() << 16) + (in.read() << 8) + in.read()) << 32) + ((long)in.read() << 24) + (in.read() << 16) + (in.read() << 8) + in.read()));
-		
+
 		// uint 8/16
 		case 0xcc: return new Long(in.read());
 		case 0xcd: return new Long((in.read() << 8) + in.read());
-		
+
 		// uint 32
 		case 0xce: return new Long(((long)in.read() << 24) + (in.read() << 16) + (in.read() << 8) + in.read());
 		// uint 64
@@ -80,13 +81,13 @@ public class Msgpack {
 			oo = ((((long)in.read() << 24) + (in.read() << 16) + (in.read() << 8) + in.read()) << 32) + ((long)in.read() << 24) + (in.read() << 16) + (in.read() << 8) + in.read();
 			if(oo < 0) throw new IOException("uint64 over 63bits is not supported");
 			else return new Long(oo);
-		
+
 		// int 8/16/32/64
 		case 0xd0: return new Long((byte)in.read());
 		case 0xd1: return new Long((short)((in.read() << 8) + in.read()));
 		case 0xd2: return new Long((in.read() << 24) + (in.read() << 16) + (in.read() << 8) + in.read());
 		case 0xd3: return new Long(((((long)in.read() << 24) + (in.read() << 16) + (in.read() << 8) + in.read()) << 32) + ((long)in.read() << 24) + (in.read() << 16) + (in.read() << 8) + in.read());
-		
+
 		// raw16(byte[])
 		case 0xd8:
 		// raw 16
@@ -111,26 +112,26 @@ public class Msgpack {
 			o = new byte[i];
 			in.read(o);
 			return new String(o, encoding);
-		
+
 		// array 16
 		case 0xdc:
 			return arr((in.read() << 8) + in.read());
 		// array 32(signed int)
 		case 0xdd:
 			return arr((in.read() << 24) + (in.read() << 16) + (in.read() << 8) + in.read());
-		
+
 		// map 16
 		case 0xde:
 			return map((in.read() << 8) + in.read());
 		// map 32(signed int)
 		case 0xdf:
 			return map((in.read() << 24) + (in.read() << 16) + (in.read() << 8) + in.read());
-		
+
 		}
 		//System.out.println(i);
 		return null;
 	}
-	
+
 	private ExHash map(int i) throws IOException {
 		if(i < 0) throw new IOException("map32 over 31bits is not supported");
 		ExHash _ = new ExHash();
@@ -140,7 +141,7 @@ public class Msgpack {
 		} catch(Exception e) {e.printStackTrace();}
 		return _;
 	}
-	
+
 	private Object[] arr(int i) throws IOException {
 		if(i < 0) throw new IOException("ary32 over 31bits is not supported");
 		Object[] _ = new Object[i];
@@ -227,6 +228,7 @@ public class Msgpack {
 		}
 		return this;
 	}
+
 	public Msgpack add(byte[] b) throws IOException {
 		OutputStream o = (OutputStream)_;
 		if(b.length < 65536) {
@@ -239,6 +241,12 @@ public class Msgpack {
 		o.write(b);
 		return this;
 	}
+
+	public Msgpack add(char[] b) throws IOException {
+		add(String.valueOf(b));
+		return this;
+	}
+
 	public Msgpack add(float i) throws IOException {
 		OutputStream o = (OutputStream)_;
 		int _ = Float.floatToIntBits(i);
@@ -250,7 +258,7 @@ public class Msgpack {
 		o.write(_);
 		return this;
 	}
-	
+
 	public Msgpack add(double i) throws IOException {
 		OutputStream o = (OutputStream)_;
 		long _ = Double.doubleToLongBits(i);
@@ -266,7 +274,7 @@ public class Msgpack {
 		o.write((int)_);
 		return this;
 	}
-	
+
 	public Msgpack add(String i) throws IOException {
 		OutputStream o = (OutputStream)_;
 		byte[] b = i.getBytes(encoding);
@@ -288,12 +296,12 @@ public class Msgpack {
 		o.write(b);
 		return this;
 	}
-	
+
 	public void add(Hashtable i) throws IOException {
 		OutputStream o = (OutputStream)_;
 		// length
 		int l = i.size();
-		
+
 		// fix map
 		if(l < 16)
 			o.write(0x80 | l);
@@ -310,10 +318,10 @@ public class Msgpack {
 			o.write(l>>8);
 			o.write(l);
 		}
-		
+
 		Enumeration e = i.keys();
 		while (e.hasMoreElements()){
-			Object key = e.nextElement(); 
+			Object key = e.nextElement();
 			add(key);
 			add(i.get(key));
 		}
@@ -323,6 +331,8 @@ public class Msgpack {
 		if(i == null) o.write(0xc0);
 		else if(i instanceof byte[]) {
 			add((byte[])i);
+		}else if(i instanceof char[]) {
+				add((char[])i);
 		}else if(i.getClass().isArray()){
 			// length
 			int l = ((Object[])i).length;
@@ -349,9 +359,9 @@ public class Msgpack {
 		else if(i instanceof Boolean)	{
 			o.write(i.equals(Boolean.TRUE) ? 0xc3 : 0xc2);
 		}
-		else if(i instanceof String) add((String)i);
-		//else if(i instanceof Vector) add((Vector)i);
-		else if(i instanceof Hashtable) add((Hashtable)i);
+		//else if(i instanceof String) add((String)i);
+		//else if(i instanceof Vector) add(((Vector)i));
+		//else if(i instanceof Hashtable) add((Hashtable)i);
 		else if(i instanceof Byte) add(((Byte)i).byteValue());
 		else if(i instanceof Short) add(((Short)i).shortValue());
 		else if(i instanceof Integer) add(((Integer)i).intValue());
@@ -359,11 +369,11 @@ public class Msgpack {
 		else if(i instanceof Double) add(((Double)i).doubleValue());
 		else throw new IOException("Unknown Object Error" /*+ o.getClass() + o*/);
 	}
-	
+
 	public void flush() throws IOException {
 		((OutputStream)_).flush();
 	}
-	
+
 	public void close() throws IOException {
 		if(_ instanceof InputStream) ((InputStream)_).close();
 		else ((OutputStream)_).close();

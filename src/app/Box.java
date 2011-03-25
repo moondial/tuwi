@@ -18,8 +18,8 @@ public class Box {
 	static Graphics g;
 	static int auto = Integer.MAX_VALUE;
 	static int 最小幅 = 50;
-	
-	
+
+
 	private Box parent;
 	public int 左, 右, 上, 下, // margin
 				幅, 高さ, // inner box size
@@ -27,40 +27,40 @@ public class Box {
 				_h, // line-height
 				x, y; // distance from display origin(0,0)
 	private Font font = Font.getDefaultFont();
-	
+
 	public Box() {
 	}
-	
+
 	public Box(int X, int Y, int w, int h) {
 		_x = x = X;
 		_y = y = Y;
 		幅 = w;
 		高さ = h;
 	}
-	
+
 	public Box info(String id) {
 		Tuwi.log(id+">> x: "+x+", y: "+y+", _x: "+_x+", _y: "+_y+", _h: "+_h+", boxW: "+boxWidth()+", boxH: "+boxHeight());
 		return this;
 	}
-	
+
 	public int boxWidth() {
 		if(幅 == auto)
 			return parent.x + parent.左 + parent.幅 - x;
 		return 左 + 幅 + 右;
 	}
-	
+
 	public int boxHeight() {
 		if(高さ == auto)
 			return _y + _h - y + 下;
 		return 上 + 高さ + 下;
 	}
-	
+
 	public Box child() {
 		Box c = new Box(_x, _y, auto, auto);
 		c.parent = this;
 		return c;
 	}
-	
+
 	/**
 	 * auto 指定で自動計算
 	 * @param left 左マージン
@@ -88,7 +88,7 @@ public class Box {
 		_x = x + 左;
 		return this;
 	}
-	
+
 	// 高さ以外にはauto設定不可
 	public Box setHeight(int top, int height, int bottom) {
 		上 = top;
@@ -101,12 +101,12 @@ public class Box {
 			parent._h = 上+height+下;
 		return this;
 	}
-	
+
 	public Box slide(int _) {
 		_y += _;
 		return this;
 	}
-	
+
 	// newLineと_hはstr(0, "");してから使うこと。
 	public Box newLine() {
 		// 下の行へ
@@ -118,12 +118,12 @@ public class Box {
 		// method chain
 		return this;
 	}
-	
+
 	// 簡単文字列描画
 	public Box str(int hex, String s) {
 		return str(hex, s, 0, 0);
 	}
-	
+
 	// 拡張文字列描画(文字色[0xrrggbb]、文字、背景色[0xaarrggbb]、装飾[consts]);
 	//public Box str(int color, String str, int bg, int dec) {
 	//	return str(color, str, bg, dec);
@@ -133,7 +133,7 @@ public class Box {
 	// 拡張文字列描画関数(文字色[0xrrggbb]、文字、背景色[0xaarrggbb]、装飾[consts]);
     public Box str(int color, String str, int bg, int dec) {
     	String sub;
-		int _w = 0, startAt = 0, endAt = 0, len = str.length();
+		int _w = 0, startAt = 0, endAt = 0, len = str.length(), numline = 0;
 		// フォント設定
 		dec += 4;
 		font = MainCanvas.fonts[dec & 0xff];
@@ -154,13 +154,13 @@ public class Box {
 			// 初期化
 			startAt = endAt;
 			endAt = font.getLineBreak(str, startAt, len, x + 左 + 幅 - _x);
-			
+
 			// 改行が存在する
 			if(startAt <= next && next < endAt) {
 				endAt = ++next;
 				next = str.indexOf('\n', endAt);
 			}
-			
+
 			//Tuwi.log("index="+next+" "+endAt);
 			sub = str.substring(startAt, endAt);
 			//Tuwi.log("|"+sub+";");
@@ -179,7 +179,7 @@ public class Box {
 			g.drawString(sub, _x, _y + font.getAscent());
 			// ここから _w は行はじめの位置から文字列末端までの幅
 			_w += _x;
-			
+
 			if(dec != 4) {
 				// 下線
 				if ((dec & UNDERLINE) != 0)
@@ -200,6 +200,9 @@ public class Box {
 			// 残り文字数
 			len -= endAt - startAt;
 			//Tuwi.log("str"+len);
+			// 固まる現象を回避
+			numline++;
+			if(numline > 30) break;
 		}
 		// 文字の右端の座標
 		_x = _w;
@@ -208,7 +211,7 @@ public class Box {
 		// メソッドチェーン
 		return this;
 	}
-    
+
     // 描画しない版str()
     public Box measure(String str, int dec) {
 		int _w = 0, startAt = 0, endAt = 0, len = str.length();
@@ -230,7 +233,7 @@ public class Box {
 			// 初期化
 			startAt = endAt;
 			endAt = font.getLineBreak(str, startAt, len, 幅 - (_x - 左 - x));
-			
+
 			// 改行が存在する
 			if(startAt <= next && next < endAt) {
 				endAt = ++next;
@@ -254,13 +257,13 @@ public class Box {
 		_y -= font.getHeight();
 		return this;
     }
-    
+
 	// 拡張文字列描画関数(文字色[0xrrggbb]、ラベル、境界線色[0xaarrggbb]、装飾[consts]);
     public Box button(int color, String str, int bc, int dec) {
     	int _w = 0;
 		font = MainCanvas.fonts[(dec + 4) & 0xff];
 		g.setFont(font);
-		
+
 		// ボタンが行内におさまらない場合
 		if(font.stringWidth(str) > 幅 - (_x - 左 - x) && _x != x + 左)
 			newLine();
@@ -287,69 +290,69 @@ public class Box {
 		_x += font.getHeight() / 2;
     	return this;
     }
-    
+
 	// 配色変更便利メゾッド
 	public Box rgb(int hex) {
 		g.setColor(Graphics.getColorOfRGB(hex >> 16 & 0xff, hex >> 8 & 0xff, hex & 0xff));
 		return this;
 	}
-	
+
 	// 配色変更便利メゾッド
 	public Box rgba(int hex) {
 		g.setColor(Graphics.getColorOfRGB(hex >> 16 & 0xff, hex >> 8 & 0xff, hex & 0xff, hex >> 24 & 0xff));
 		return this;
 	}
-	
+
 	public Box rgba2(boolean b, int link, int focus) {
 		if(b) rgba(focus); else rgba(link);
 		return this;
 	}
-	
+
 	public Box rect() {
 		g.drawRect(x, y, boxWidth(), boxHeight());
 		return this;
 	}
-	
+
 	public Box fill() {
 		g.fillRect(x, y, boxWidth(), boxHeight());
 		return this;
 	}
-	
+
 	public Box clip() {
 		g.setClip(x, y, boxWidth(), boxHeight());
 		return this;
 	}
-	
+
 	public Box parent() {
 		g.clearClip();
 		return this.parent;
 	}
-	
+
 	public void clear() {
 		g.clearRect(x, y, boxWidth(), boxHeight());
 	}
-	
+
 	/*public boolean hit(int X, int Y) {
 		if(y <= Y && Y <= y+上+高さ+下 && x <= X && X <= x+左+幅+右)
 			return true;
 		return false;
 	}*/
-	
+
 	//public int[] capture(int[] arg) {
 	//	return g.getRGBPixels();
 	//}
-	
+
 	//public Box restore(int[] arg) {
 	//	g.setRGBPixels();
 	//	return this;
 	//}
-	
+
 	public Box img(MediaImage m) {
 		if(m != null)
 			g.drawImage(m.getImage(), _x, _y);
 		return this;
 	}
-	
+
 	public Box img(MediaImage m, int w, int h) {
 		if(m != null)
 			g.drawScaledImage(m.getImage(), _x, _y, w, h, 0, 0, m.getWidth(), m.getHeight());
@@ -357,7 +360,7 @@ public class Box {
 		if(_h < h) _h = h;
 		return this;
 	}
-	
+
 	public Box img(MediaImage m, int x, int y, int w, int h, int sx, int sy, int sw, int sh) {
 		if(m != null)
 			g.drawScaledImage(m.getImage(), x, y, w, h, sx, sy, sw, sh);
@@ -365,11 +368,11 @@ public class Box {
 		//if(_h < h) _h = h;
 		return this;
 	}
-	
+
 	public Box chip() {
 		return this;
 	}
-	
+
 	// text_chunkの描画。focus_at番目のとき選択色で描画。fomatに画面のy座標を保存
 	public Box richstr(String[] text_chunk, int[] format, int focus_at) {
 		//Tuwi.log(text_chunk.length + ","+format.length+ ","+focus_at);
@@ -390,7 +393,7 @@ public class Box {
 		}
 		return this;
 	}
-	
+
 	// 本当はイベント対応とかもやりたいのだが。。。
 	public Box linkstr(String s, int color, int focus, int bgcolor, boolean hasfocus) {
 		if(hasfocus)
@@ -399,6 +402,6 @@ public class Box {
 			str(color, s, 0, 0);
 		return this;
 	}
-	
+
 	// TODO: v/h grads
 }

@@ -24,9 +24,9 @@ class TimelineView extends View {
 	 * @param focus_at 選択中の要素 == data[focus_at]
 	 * @param link_at 選択中のリンクの番号
 	 * @param scroll_level 必死だな（藁
-	 * 
+	 *
                  ,´ _,, '-´￣￣｀-ゝ 、_ イ、
-                'r ´          ヽ、ﾝ、  
+                'r ´          ヽ、ﾝ、
                 ,'＝=─-      -─=＝', i
                 i ｲ iゝ、ｲ人レ／_ルヽｲ i |
                 ﾚﾘｲi (ﾋ_]     ﾋ_ﾝ ).| .|、i .||
@@ -40,7 +40,7 @@ class TimelineView extends View {
                   └──────┘
 	 */
 	public int index, y, focus_at, link_at, scroll_level, last;
-	
+
 	TimelineView(Account a, String n, String u) {
 		account = a;
 		title = n;
@@ -53,20 +53,21 @@ class TimelineView extends View {
 		onKeyPress[Display.KEY_DOWN] = 21;
 		onKeyRepeat[Display.KEY_UP] = 20;
 		onKeyRepeat[Display.KEY_DOWN] = 21;
-		onKeyPress[Display.KEY_SELECT] = -42;
+		onKeyRelease[Display.KEY_SELECT] = -42;
 		onKeyRelease[Display.KEY_SOFT1] = -40;
 		onKeyRelease[Display.KEY_SOFT2] = -41;
 		handleEvent(1);
 	}
-	
+
 	public void render(Box b) {
+		try {
 		b._y -= y;
 		//Tuwi.log(y+" "+b._y);
 		// 余白の設定
 		b.setWidth(0, Box.auto, 0);
 		// 名前
 		//b.str(0, account.userid()).newLine();
-		
+
 		//int selected = 0xffE8F2FE;
 		//int raw = (mc.getHeight() - b._y) / (b._h * 2 + 4) ;
 		//b.str(0, URLUtils.loadedBytes + "bytes 計" + Tuwi.conf.Long("dlBytes") / 1024 + "Kbytes "+data.size()+"本").newLine();
@@ -78,10 +79,13 @@ class TimelineView extends View {
 		int iconW = 0;
 		if(Tuwi.conf.bool("showIcons"))
 			iconW = 48;
-		
+
 		int i;
 		for(i=index; i<data.size(); ++i) {
-			Element elm = (Element)data.elementAt(i);
+			Element elm;
+			synchronized(data) {
+				elm = (Element)data.elementAt(i);
+			}
 			elm.y = b._y;
 			if(elm instanceof Status) {
 				Status s = (Status)elm;
@@ -109,7 +113,7 @@ class TimelineView extends View {
 					footer += '(' + s.source + ')';
 				if(isRT)
 					name += "(RT*" + ((Status)elm).user.getName() + ")";
-				
+
 				// 高さを予め決めておく
 				int height = b.child().setWidth(iconW, Box.auto, 0)
 				.measure(name, 0)
@@ -118,7 +122,7 @@ class TimelineView extends View {
 				// 縦幅は最低でもアイコン高さ以上
 				if(height < iconW) height = iconW;
 				((Element)elm).height = height;
-				
+
 				Box bb = b.child()
 				.setWidth(0, Box.auto, 0)
 				.setHeight(0, height, 0)
@@ -140,16 +144,18 @@ class TimelineView extends View {
 			if(b._y > mc.getHeight()) break;
 		}
 		last = i;
-		
+
 		b.parent(); // unclip
 		drawScrollBar(data.size(), index, index + 5);
 		// todo: focus, click events
+		} catch(Exception e) {
+		}
 	}
 
 	public boolean handleEvent(int ev, Object o) {
 		if(ev > 21 || ev < -21)
 			Tuwi.log("TimelineView#" + ev);
-		
+
 		switch (ev) {
 		case 1: // focus
 			mc.setSoftLabel(0, "続き");
@@ -195,29 +201,31 @@ class TimelineView extends View {
 				} else
 					Status.unpack((Object[])res.msg, data);
 				Tuwi.log(data.size()+"");
-				sort(data, 0, data.size() - 1);
+				synchronized(data) {
+					sort(data, 0, data.size() - 1);
+				}
 				if(url.charAt(0) == 'h')
 					account.read_id = Math.max(((Element)data.firstElement()).id, ((Element)data.lastElement()).id);
 				Tuwi.saveConf();
-				
+
 				/*o = data[index];  // フォーカスを保存
 				index = -1;
 				quickSort(data, 0, data.length - 1, false);
-				
+
 				for (ev = 0; ev < data.length; ++ev) {
 					data[ev].height = 0;
 					if(data[ev] == o) index = ev;
 				}
 				if(index == -1)
 					index = link_at = 0;
-				
+
 				first_id = Math.min(data[0].id, data[data.length - 1].id);
 				latest_id = Math.max(data[0].id, data[data.length - 1].id);
-			
+
 				// TODO: if home>任意指定可へ
 				if(url.charAt(0) == 'h') account.read_id = latest_id;
 				Tuwi.saveConf();
-				
+
 				//* / 強制的に一度描画させる
 				Tuwi.log("y: "+y+" "+data[index].chunk_ypos[link_at]+" "+index+" "+link_at);
 				y = 0x40000000;
@@ -236,6 +244,7 @@ class TimelineView extends View {
 				if(Tuwi.conf.bool("autoIconDL"))
 					URLUtils.createThread(this, 17, null);
 				p.close();
+				mc.repaint();
 			} catch (Exception e) {
 				e.printStackTrace();
 				p.close();
@@ -320,18 +329,19 @@ class TimelineView extends View {
 				if(ev == 42) {
 					handleEvent(16, url);
 				}
+				onKeyRelease[Display.KEY_SELECT] = 0;
 				onKeyPress[Display.KEY_SELECT] = 25;
 			}
-			break;	
+			break;
 		}
 		return false;
 	}
-	
+
 	// キーの状態 dir = {0: なし, 1: 上, -1: 下}
 	public void scroll(int dir) {
 		//*** Phase0 転ばぬ先の杖
 		if(data.isEmpty()) return;
-		
+
 		//*** Phase1 縦位置の移動
 		// スクロール方向と同じキーが押されていなかったらゆっくり魔理沙
 		if(dir == 0 || scroll_level * dir > 0) {
@@ -352,7 +362,8 @@ class TimelineView extends View {
 			if(scroll_level <= 2) y = 0;
 		} else if(index + 1 >= data.size() && y > 0)
 			scroll_level = -(int)Math.abs(scroll_level * 0.8) - 2;
-		
+
+		synchronized(data) {
 		//*** Phase2 要素のスキップ
 		int i;
 		//Tuwi.log("y: "+y+" index.height:"+i);
@@ -372,7 +383,7 @@ class TimelineView extends View {
 			index--;
 			y += i;
 		}
-		
+
 		//*** Phase3 リンクの移動
 		/**
 		 * link at +1
@@ -393,11 +404,12 @@ class TimelineView extends View {
 		Element e = (Element)data.elementAt(i);
 		int j = e.getLinkYpos(l);
 		// 行き過ぎた戻せ
-		if(i < index || last <= j) {
+		/*if(i < index || last <= j) {
 			Tuwi.log("戻した");
 			i = index;
 			l = 0;
 		}
+		//*/
 		while(true) {
 			e = (Element)data.elementAt(i);
 			l -= dir;
@@ -430,10 +442,11 @@ class TimelineView extends View {
 					break;
 			}
 		}
+		}
 		Tuwi.log("i:"+focus_at+ ", l:"+link_at);
 		mc.repaint();
 	}
-	
+
 	// from http://lecture.ecc.u-tokyo.ac.jp/~cichiji/cp-03/cp-03-12-2.html
 	public void sort(Vector a, int left, int right) {			// クイックソート(昇順)
 		if (left < right) {
@@ -449,7 +462,7 @@ class TimelineView extends View {
 					swap(a, p, i);				// a[p]とa[i]を交換する．
 				}					// a[left+1]からa[p]までは基準値より小さい．
 				//else if(ai.created_at == pivot.created_at)
-				//	a.removeElementAt(i);	// 重複削除 
+				//	a.removeElementAt(i);	// 重複削除
 			}
 			a.setElementAt(a.elementAt(p), left);
 			//a[left] = a[p];				// a[left]にa[p]を代入
