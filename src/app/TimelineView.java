@@ -203,6 +203,10 @@ class TimelineView extends View {
 				Tuwi.log(data.size()+"");
 				synchronized(data) {
 					sort(data, 0, data.size() - 1);
+					// èdï°çÌèú
+					for(int i=0; i<data.size()-1; ++i)
+						if(((Element)data.elementAt(i)).id == ((Element)data.elementAt(i+1)).id)
+							data.removeElementAt(i);
 				}
 				if(url.charAt(0) == 'h')
 					account.read_id = Math.max(((Element)data.firstElement()).id, ((Element)data.lastElement()).id);
@@ -414,11 +418,11 @@ class TimelineView extends View {
 		while(true) {
 			e = (Element)data.elementAt(i);
 			l -= dir;
-			Tuwi.log("l: "+l);
+			//Tuwi.log("l: "+l);
 			if(0 <= l && l <= e.format.length) {
 				if(e.getLinkType(l) > 0) {
 					j = e.getLinkYpos(l);
-					Tuwi.log("j: "+j);
+					//Tuwi.log("j: "+j);
 					if(0 <= j && j + 100 < mc.getHeight()) {
 						link_at = l;
 						focus_at = i;
@@ -429,7 +433,7 @@ class TimelineView extends View {
 				}
 			} else {
 				i -= dir;
-				Tuwi.log("i: "+i);
+				//Tuwi.log("i: "+i);
 				if(0 <= i && i < data.size()) {
 					if(dir < 0) {
 						Tuwi.log("l: -1 <= "+l);

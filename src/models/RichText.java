@@ -10,12 +10,12 @@ public class RichText {
 	public static final int LINK = 1;
 	public static final int ATREPLY = 2;
 	public static final int HASHTAG = 3;
-	
+
 	// 文字色, 選択文字色, 背景色
-	public static int[] color = {0x000000, 0x0000ff, 0xff0000, 0x00ff00};
-	public static int[] color_h = {0x000000, 0x0000ff, 0xff0000, 0x00ff00};
-	public static int[] bgcolor = {0x00000000, 0x7f0000ff, 0x7fff0000, 0x7f00ff00};
-	
+	public static int[] color = {0x000000, 0x8888ff, 0xFF6347, 0x006400};
+	public static int[] color_h = {0x000000, 0x6666ff, 0xFF6347, 0x006400};
+	public static int[] bgcolor = {0x00000000, 0x7ff5fffa, 0x7fFEEEF1, 0x7ff0fff0};
+
 	// 装飾対象文字列。
 	public String text;
 	/** 文字列フォーマット。
@@ -25,8 +25,8 @@ public class RichText {
 	* CCC := 文字数 0..4095
 	**/
 	public int[] format;
-	public RE urlize = new RE("(https?://[^　。）<> '\"]+|@\\w{1,15}|#\\w{1,15})");
-	
+	public RE urlize = new RE("(https?://[\\w;/?:@&=+$-_.!~*()#〃-\\u9fa5\\uf900-\\ufa6a]+|@[\\w]{1,15}|#[\\-\\w\\d_〃-\\u9fa5\\uf900-\\ufa6a]+)");
+
 	public String[] getSplitedText() {
 		String[] result = new String[format.length];
 		for(int i=0, pos=0; i<result.length; ++i) {
@@ -35,7 +35,7 @@ public class RichText {
 		}
 		return result;
 	}
-	
+
 	public void setText(String s) {
 		text = s;
         // Create new vector
@@ -48,7 +48,7 @@ public class RichText {
         // Try a match at each position
         while (pos < len && urlize.match(s, pos)) {
         	//System.out.println("RE: "+getParen(0)+" "+getParen(1)+" "+getParen(2));
-        
+
             // Get start of match
             int start = urlize.getParenStart(0);
 
@@ -58,13 +58,13 @@ public class RichText {
             // Check if no progress was made
             if (newpos == pos) {
             	//Tuwi.log("0:"+s.substring(pos, start + 1));
-                v.addElement(new Integer(0xfff & (start + 1 - pos))); 
+                v.addElement(new Integer(0xfff & (start + 1 - pos)));
                 newpos++;
             } else {
             	//Tuwi.log("1:"+s.substring(pos, start));
             	v.addElement(new Integer(0xfff & (start - pos)));
             }
-            
+
             start = PLAIN;
             for(int i=1, l=urlize.getParenCount(); i<l; ++i) {
             	switch(text.charAt(urlize.getParenStart(i))) {
@@ -80,7 +80,7 @@ public class RichText {
             	//Tuwi.log("2:"+urlize.getParen(i));
             	v.addElement(new Integer((start << 28) + (0xfff & urlize.getParenLength(i))));
             }
-            
+
             // Move to new position
             pos = newpos;
         }
@@ -91,7 +91,7 @@ public class RichText {
         	//Tuwi.log(remainder);
         	v.addElement(new Integer(0xfff & s.length()));
         }
-        
+
         format = new int[v.size()];
         for(int i=0; i<format.length; ++i)
         	format[i] = ((Integer)v.elementAt(i)).intValue();

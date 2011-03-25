@@ -1,7 +1,7 @@
 PackageURL = Tuwi.jar
-AppSize = 108550
+AppSize = 89551
 AppName = Tuwi
-AppVer = 0.3
+AppVer = 0.32
 DrawArea = 240x320
 AppClass = app.Tuwi
 SPsize = 400000
@@ -10,5 +10,5 @@ UseNetwork = http
 AppTrace = on
 UseStorage = ext
 GetSysInfo = yes
-LastModified = Tue, 15 Mar 2011 22:05:24
+LastModified = Fri, 25 Mar 2011 23:39:00
 LaunchByBrowser = any

@@ -24,18 +24,18 @@ public class URLUtils extends Thread{
 	public static int loadedBytes = 0;
 	public static long lastReqAt = 0; // 最終接続時 0: iモード未接続
 	public static HttpConnection con = null;
-	
+
 	// HTTPステータスコード
 	public int code;
 	// レスポンス本体
 	public Object msg;
 	// メタデータ（つまり何か）
 	public ExHash meta;
-	
+
 	private URLUtils() {}
 
 	public static final int ZIPPED = 1, PLAIN_TEXT = 2, PACKED = 4;
-	
+
 	/**
 	 * 引数を簡易エンコードします。値がnullだと自動省略するおまけ付き。
 	 * @param s {key1, value1, key2, value2, ...}
@@ -44,7 +44,7 @@ public class URLUtils extends Thread{
 	public static String urlencode(String[] s) {
 		StringBuffer url = new StringBuffer();
 		for(int i=0; i < s.length/2; ++i) {
-			// if value is null, skip it. 
+			// if value is null, skip it.
 			if(s[i*2 + 1] == null)
 				continue;
 			if(i > 0)
@@ -80,11 +80,11 @@ public class URLUtils extends Thread{
 		ByteArrayOutputStream outstr = new ByteArrayOutputStream();
 		URLUtils res = new URLUtils();
 		int code = -1;
-		
+
 		Tuwi.log("取得[" + Tuwi.BASE + path + " " + data + " " + type + "]");
 		lastReqAt = System.currentTimeMillis();
 		loadedBytes = 0;
-		
+
 		try {
 			if(data != null) {
 				con = (HttpConnection) Connector.open(Tuwi.BASE + path, Connector.READ_WRITE, true);
@@ -143,7 +143,7 @@ public class URLUtils extends Thread{
 			in = null;
 			dlarray = outstr.toByteArray();
 			outstr.close();
-			
+
 			// DL情報保存
 			loadedBytes = dlarray.length;
 			Tuwi.conf.incr("dlBytes", loadedBytes);
@@ -151,7 +151,7 @@ public class URLUtils extends Thread{
 			Tuwi.conf.incr("dlPackets", (loadedBytes / 128) + 2);
 			// このライブラリ内では保存しない
 			//Tuwi.saveConf();
-			
+
 			//System.out.println(new String(dlarray));
 			// 解凍
 			/* from iMona.java
@@ -177,7 +177,7 @@ public class URLUtils extends Thread{
 				//b2[11] = (byte)0xA1;
 				//b2[12] = 0x5E;
 				//b2[13] = 0x3F;
-				
+
 				b2[14] = b[b.length-8];
 				b2[15] = b[b.length-7];
 				b2[16] = b[b.length-6];
@@ -237,7 +237,7 @@ public class URLUtils extends Thread{
 					in = new ByteArrayInputStream(dlarray);
 				res.msg = new Msgpack(in);
 				((Msgpack)res.msg).close();
-				
+
 			}
 			// 平文
 			else if (con.getHeaderField("Content-Type").startsWith("text/html")) {
@@ -268,7 +268,7 @@ public class URLUtils extends Thread{
 		}
 		return res;
 	}
-	
+
 	// つゐにログインする。引数=true で強制ログイン。
 	public static boolean Auth(Account a, boolean force) {
 		if(!(a.token.equals("") || force)) return true;
@@ -278,6 +278,7 @@ public class URLUtils extends Thread{
 					"t", a.oauth_token,
 					"s", a.oauth_token_secret,
 					"p", a.password,
+					"n", String.valueOf(a.user),
 					"v", Tuwi.version};
 			if(a.oauth_token.length() > 0)
 				t[7] = null;
@@ -299,7 +300,7 @@ public class URLUtils extends Thread{
 		}
 		return false;
 	}
-	
+
 	/*public static Msgpack APIRequest(Account a, String url, String d) {
 		URLUtils res;
 		String title, msg;
@@ -351,28 +352,28 @@ public class URLUtils extends Thread{
 				Tuwi.log(new String(dlarray));
 			}
 		}
-		
+
 		// 通信エラーは表示しない
 		if(res.code < 1000)
 			Tuwi.dialog(Dialog.DIALOG_WARNING, title, msg);
 		return null;
 	}
 	*/
-	
-	
+
+
 	public static URLUtils APIRequest(Account a, String url, String d) {
 		URLUtils res;
-		
+
 		Auth(a, false);
 		if(a.token.equals(""))
 			return null;
 		res = Request("tuwi/" + a.token + "/" + url, d, 0);
-		
+
 		if(res.code == 401) {
 			Auth(a, true);
 			res = Request("tuwi/" + a.token + "/" + url, d, 0);
 		}
-		
+
 		try {
 			res.meta = (ExHash)((Msgpack)res.msg).getObject();
 			res.msg = ((Msgpack)res.msg).getObject();
@@ -382,7 +383,7 @@ public class URLUtils extends Thread{
 		}
 		return res;
 	}
-	
+
 	// Threads
 	public static void createThread(View v, int e, Object o) {
 		URLUtils u = new URLUtils();
@@ -390,7 +391,7 @@ public class URLUtils extends Thread{
 		u.msg = new Object[]{v, o};
 		u.start();
 	}
-	
+
 	public void run() {
 		Tuwi.log("開始: " + Thread.currentThread().getName());
 		((View)((Object[])msg)[0]).handleEvent(code, ((Object[])msg)[1]);

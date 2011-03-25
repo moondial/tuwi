@@ -20,13 +20,13 @@ public class Tuwi extends IApplication{
 	MainCanvas c;
 	public static String SP_URI = "scratchpad:///0;pos=0"; // scratchpad uri
 	public static String BASE = "http://moondial0.net/";
-	public static String version = "0.31";
+	public static String version = "0.32";
 	public static boolean DEBUG = false;
 	public static ExHash conf; // 共通設定
 	//public static String[] msg_log = new String[1000];
 	//public static int msg_cnt;
 	public static Tuwi self; // 自身への公開参照
-	
+
 	public void start() {
 		self = this;
 		// デバッグ環境用
@@ -36,10 +36,10 @@ public class Tuwi extends IApplication{
 		}
 		// 描画開始前に設定読み込み（ぬるぽ回避）
 		loadConf();
-		
+
 		Account.load((Object[])conf.get("accounts"));
 		log(Account.getAccounts().toString() + conf);
-		
+
 		// oAuth 認証完了ページから起動
 		if (getLaunchType() == IApplication.LAUNCHED_FROM_BROWSER &&
 				getParameter("mode") != null &&
@@ -77,13 +77,13 @@ public class Tuwi extends IApplication{
 		r.setText("@a#s@");
 		r.getSplitedText();*/
 	}
-	
+
 	public static Object log(Object o) {
 		// TODO:regexp 開業
 		LogView.log(o.toString());
 		return o;
 	}
-	
+
 	public static void loadConf() {
 		Msgpack m = null;
 		try {
@@ -124,7 +124,7 @@ public class Tuwi extends IApplication{
 			try {m.close();} catch (Exception e) {}
 		}
 	}
-	
+
 	/*public static Object packtabs() {
 		Vector tabs = TabView.tabList;
 		Vector out = new Vector();
@@ -147,7 +147,7 @@ public class Tuwi extends IApplication{
 			return key;
 		return def;
 	}
-	
+
 	public static long getNum(Object o) {
 		Object i = conf.get(o);
 		if(i == null) return 0;
@@ -157,18 +157,18 @@ public class Tuwi extends IApplication{
 			return ((Integer) i).longValue();
 		return 0;
 	}
-	
+
 	public static void addNum(Object o, long i) {
 		conf.put(o.toString(), new Long(getNum(o) + i));
 	}*/
-	
+
 	public static int dialog(int type, String title, Object msg) {
 		Dialog d = new Dialog(type, title);
 		d.setText(msg.toString());
 		d.setFont(Font.getDefaultFont());
 		return d.show();
 	}
-	
+
 	public void openURI(String url) {
 		openURI(url, "http://www.google.com/gwt/x?u=");
 	}

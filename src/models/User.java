@@ -15,23 +15,23 @@ import com.nttdocomo.ui.MediaImage;
 import com.nttdocomo.ui.MediaManager;
 
 public class User extends Element {
-	
+
 	long imgid;
 	public String screen_name, name, location;
 	//[has[isfull,uid,name,imgid,loc], screen_name, uid, name, imgid, location,
 	//	offset, timezone, lang, url, bio, tweets, friends, followers, favorites,
 	//	created_at, flags[following,verified,protected,geo_enabled,contributors]]
-	
+
 	// アイコンの実体(MediaImage一ヶ入)
 	WeakReference icon;
 	boolean hasIcon;
-	
+
 	private static Hashtable icon_cache = new Hashtable(); // 二次アイコンキャッシュ
 	private static Hashtable icons_bin = new Hashtable(); // 一次アイコンキャッシュ
 	private static int アイコン同時DL最大数 = 200;  // 増やしすぎるとドコモの300KB制限に引っかかる
 	// アイコンの平均サイズは1.3KB(最大圧縮時0.9KBぐらい)なので少し余裕がある
 	private static MediaImage none_icon = MediaManager.getImage("resource:///nobody_icon.gif");
-	
+
 	static {
 		try {
 			none_icon.use();
@@ -47,7 +47,7 @@ public class User extends Element {
 		Long r;
 		Vector v = new Vector();
 		for(int i=0; i<elements.size(); ++i) {
-			Element s = (Element)elements.elementAt(i); 
+			Element s = (Element)elements.elementAt(i);
 			if(s instanceof Status) {
 				r = new Long(((Status)s).user.imgid);
 				if(!v.contains(r) && !icons_bin.containsKey(r)) {
@@ -93,15 +93,15 @@ public class User extends Element {
 		}
 		Tuwi.log(icons_bin.size() + "個のアイコンを保持");
 	}
-	
+
 	public static Hashtable getIMGCache() {
 		return icons_bin;
 	}
-	
+
 	public static void setIMGCache(Hashtable h) {
 		if(h != null) icons_bin = h;
 	}
-	
+
 	public static User parse(Object[] _) {
 		// is full?
 		if((((Long)_[0]).longValue() & 1) == 1) {
@@ -110,7 +110,7 @@ public class User extends Element {
 			return new User(_);
 		}
 	}
-	
+
 	protected User(Object[] _) {
 		super(_);
 		int i = 0;
@@ -126,7 +126,7 @@ public class User extends Element {
 		if(full || ((flg & 16) != 0))
 			location = (String)_[i++];
 	}
-	
+
 	public MediaImage getIcon() {
 		// icon_cache->raw cache->noneicon
 		if(hasIcon) {
@@ -161,5 +161,9 @@ public class User extends Element {
 		if(i == 1) return screen_name;
 		if(i == 2) return name;
 		return screen_name + "/" + name;
+	}
+
+	public String toString() {
+		return screen_name;
 	}
 }
