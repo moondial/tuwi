@@ -339,6 +339,7 @@ class TimelineView extends View {
 
 	// ÉLÅ[ÇÃèÛë‘ dir = {0: Ç»Çµ, 1: è„, -1: â∫}
 	public void scroll(int dir) {
+		try {
 		//*** Phase0 ì]ÇŒÇ êÊÇÃèÒ
 		if(data.isEmpty()) return;
 
@@ -443,8 +444,11 @@ class TimelineView extends View {
 			}
 		}
 		}
-		Tuwi.log("i:"+focus_at+ ", l:"+link_at);
+		//Tuwi.log("i:"+focus_at+ ", l:"+link_at);
 		mc.repaint();
+		} catch(Exception e) {
+			Tuwi.log(e);
+		}
 	}
 
 	// from http://lecture.ecc.u-tokyo.ac.jp/~cichiji/cp-03/cp-03-12-2.html
